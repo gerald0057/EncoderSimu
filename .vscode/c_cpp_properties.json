@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "STM32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Core/Inc/**",
+                "${workspaceFolder}/Drivers/STM32G0xx_HAL_Driver/Inc/**",
+                "${workspaceFolder}/Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/**",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32G0xx/Include/**",
+                "${workspaceFolder}/Drivers/CMSIS/Include/**"
+            ],
+            "defines": [
+                "STM32G030xx",
+                "__GNUC__"
+            ],
+            "compilerPath": "${ARM_GCC10}/arm-none-eabi-gcc.exe",
+            "cStandard": "c11",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}
