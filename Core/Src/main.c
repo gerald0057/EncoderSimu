@@ -27,7 +27,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "task_app.h"
-#include "u8g2.h"
+#include "u8g2_porting.h"
+#include "mui.h"
+#include "mui_u8g2.h"
+#include "stdio.h"
+#include "encoder_simu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,70 +64,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE BEGIN PFP */
-uint8_t u8g2_gpio_and_delay_stm32(U8X8_UNUSED u8x8_t *u8x8, U8X8_UNUSED uint8_t msg, U8X8_UNUSED uint8_t arg_int, U8X8_UNUSED void *arg_ptr)
-{
-	/* STM32 supports HW SPI, Remove unused cases like U8X8_MSG_DELAY_XXX & U8X8_MSG_GPIO_XXX */
-	switch(msg)
-	{
-	case U8X8_MSG_GPIO_AND_DELAY_INIT:
-		/* Insert codes for initialization */
-		break;
-	case U8X8_MSG_DELAY_MILLI:
-		/* ms Delay */
-		HAL_Delay(arg_int);
-		break;
-	case U8X8_MSG_GPIO_CS:
-		/* Insert codes for SS pin control */
-		HAL_GPIO_WritePin(OLED_CS_GPIO_Port, OLED_CS_Pin, arg_int);
-		break;
-	case U8X8_MSG_GPIO_DC:
-		/* Insert codes for DC pin control */
-		HAL_GPIO_WritePin(OLED_DC_GPIO_Port, OLED_DC_Pin, arg_int);
-		break;
-	case U8X8_MSG_GPIO_RESET:
-		/* Insert codes for RST pin control */
-		HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST_Pin, arg_int);
-		break;
-	}
-	return 1;
-}
-uint8_t u8x8_byte_stm32_hw_spi(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr)
-{
-	switch(msg) {
-	case U8X8_MSG_BYTE_SEND:
-		/* Insert codes to transmit data */
-		if(HAL_SPI_Transmit(&hspi1, arg_ptr, arg_int, 0xff) != HAL_OK) return 0;
-		break;
-	case U8X8_MSG_BYTE_INIT:
-		/* Insert codes to begin SPI transmission */
-		break;
-	case U8X8_MSG_BYTE_SET_DC:
-		/* Control DC pin, U8X8_MSG_GPIO_DC will be called */
-		u8x8_gpio_SetDC(u8x8, arg_int);
-		break;
-	case U8X8_MSG_BYTE_START_TRANSFER:
-		/* Select slave, U8X8_MSG_GPIO_CS will be called */
-		u8x8_gpio_SetCS(u8x8, u8x8->display_info->chip_enable_level);
-		HAL_Delay(1);
-		break;
-	case U8X8_MSG_BYTE_END_TRANSFER:
-		HAL_Delay(1);
-		/* Insert codes to end SPI transmission */
-		u8x8_gpio_SetCS(u8x8, u8x8->display_info->chip_disable_level);
-		break;
-	default:
-		return 0;
-	}
-	return 1;
-}
-
-void u8g2_oled_init(u8g2_t *u)
-{
-    u8g2_Setup_ssd1306_128x64_noname_f(u, U8G2_R0, u8x8_byte_stm32_hw_spi, u8g2_gpio_and_delay_stm32);
-    u8g2_InitDisplay(u);
-	  u8g2_SetPowerSave(u, 0);
-    u8g2_ClearBuffer(u);
-}
 
 static unsigned char bitmap[] = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -230,6 +170,7 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -238,19 +179,45 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   u8g2_t u;
   u8g2_oled_init(&u);
-    // task_protocol(NULL);
+  u8g2_FirstPage(&u);
+  do
+  {
+      u8g2_ClearBuffer(&u);
+      u8g2_SetDrawColor(&u,1);
+      u8g2_SetBitmapMode(&u,1);
+      u8g2_DrawBitmap(&u, 0, 0, bitmap_height, bitmap_width,  bitmap);
+  }
+  while (u8g2_NextPage(&u));
+
+  // muif_t muif_list[] = {
+  //   MUIF_U8G2_FONT_STYLE(0, u8g2_font_helvR08_tr),   /* define style 0 */
+  //   MUIF_U8G2_LABEL(),                               /* allow MUI_LABEL macro */
+  //   MUIF_BUTTON("BN", mui_u8g2_btn_exit_wm_fi)       /* define exit button */
+  // };
+
+  // fds_t fds_data[] =                     /* Don't use comma between the commands! */
+  // MUI_FORM(1)                            /* This will start the definition of form 1 */
+  // MUI_STYLE(0)                           /* select the font defined with style 0 */
+  // MUI_LABEL(5, 15, "Hello U8g2")         /* place text at postion x=5, y=15 */
+  // MUI_XYT("BN",64, 30, " Exit ")         /* place the exit button at pos x=64, y=30 */
+  // ;
+
+  // mui_t mui;
+
+  // mui_Init(&mui, NULL, fds_data, muif_list, sizeof(muif_list)/sizeof(muif_t));
+  // mui_GotoForm(&mui, 1, 0);
+  // mui_Draw(&mui);
+
   
+    enc_simu_start(ENC_SIMU_CHANNLE_1);
+
   while (1)
   {
-    u8g2_FirstPage(&u);
-    do
-    {
-        u8g2_ClearBuffer(&u);
-        u8g2_SetDrawColor(&u,1);
-        u8g2_SetBitmapMode(&u,1);
-        u8g2_DrawBitmap(&u, 0, 0, bitmap_height, bitmap_width,  bitmap);
-    }
-    while (u8g2_NextPage(&u));
+
+    HAL_Delay(500);
+    HAL_GPIO_TogglePin(LED_SYS_GPIO_Port, LED_SYS_Pin);
+    HAL_GPIO_TogglePin(LED_CH1_GPIO_Port, LED_CH1_Pin);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
