@@ -28,16 +28,23 @@ typedef struct cfg cfg_t;
 
 struct cfg
 {
-    const double PI;        /* mathematical PI */
-
+    const double PI;                        /* mathematical PI */
     /* rotary encoder setting */
-    double diameter;        /* wheel diameter */
-    uint32_t ppr;           /* pulse per revolution */
-
+    double diameter;                        /* wheel diameter */
+    uint32_t ppr;                           /* pulse per revolution */
     /* speed setting */
     double speed[ENC_SIMU_CHANNEL_MAX];     /* channel speed */
     double dir[ENC_SIMU_CHANNEL_MAX];       /* channel direction */
 };
+
+#define CFG_INITIAL                                                             \
+{                                                                               \
+    .PI = 3.14,                                                                 \
+    .diameter = 53.6,                                                           \
+    .ppr = 2000,                                                                \
+    .speed = {50, 50, 100, 100},                                                \
+    .dir = {ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL} \
+}
 
 cfg_t *cfgm(void);
 
