@@ -31,6 +31,8 @@ struct stm32_timer_enc
 
 struct stm32_timer_ops
 {
+    int (*init)  (void);
+    int (*deinit)(void);
     int (*open)  (int channel);
     int (*close) (int channel);
     int (*config)(int channel, uint32_t psc, uint32_t arr);
@@ -38,11 +40,27 @@ struct stm32_timer_ops
 
 struct stm32_timer_enc enc_simu_map[] =
 {
-    {&htim1, {TIM_CHANNEL_1, TIM_CHANNEL_2}},
-    {&htim1, {TIM_CHANNEL_3, TIM_CHANNEL_4}},
     {&htim3, {TIM_CHANNEL_1, TIM_CHANNEL_2}},
     {&htim3, {TIM_CHANNEL_3, TIM_CHANNEL_4}},
+    {&htim1, {TIM_CHANNEL_1, TIM_CHANNEL_2}},
+    {&htim1, {TIM_CHANNEL_3, TIM_CHANNEL_4}},
 };
+
+static int stm32_timer_enc_init(void)
+{
+    MX_TIM1_Init();
+    MX_TIM3_Init();
+}
+
+static int stm32_gpio_enc_init(void)
+{
+    
+}
+
+static int stm32_gpio_trigger_init(void)
+{
+    
+}
 
 static int stm32_timer_enc_start(int channel)
 {
@@ -85,8 +103,17 @@ static int stm32_timer_enc_config(int channel, uint32_t psc, uint32_t arr)
         __HAL_TIM_SET_AUTORELOAD(device->htim, arr - 1);
         __HAL_TIM_SET_PRESCALER(device->htim, psc - 1);
         __HAL_TIM_SET_COUNTER(device->htim, 0);
-        __HAL_TIM_SET_COMPARE(device->htim, device->channels[0], 0);
-        __HAL_TIM_SET_COMPARE(device->htim, device->channels[1], (arr - 1) / 2);
+
+        if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
+        {
+            __HAL_TIM_SET_COMPARE(device->htim, device->channels[0], 0);
+            __HAL_TIM_SET_COMPARE(device->htim, device->channels[1], (arr - 1) / 2);
+        }
+        else if (ENC_SIMU_DIR_RL == cfgm()->dir[channel])
+        {
+            __HAL_TIM_SET_COMPARE(device->htim, device->channels[0], (arr - 1) / 2);
+            __HAL_TIM_SET_COMPARE(device->htim, device->channels[1], 0);
+        }
     }
 
     return 0;
@@ -124,9 +151,12 @@ static int enc_speed_to_pulse(double speed)
      *      = (speed * ppr / 60) / (pi * diameter / 1000)
      *      = (speed * ppr * 1000) / (pi * diameter * 60)
      */
-    uint32_t pulse_per_sec = (uint32_t)(speed * ppr * 1000) / (PI * d * 60);
+    uint32_t pulse_per_sec = (uint32_t)((speed * ppr * 1000.0) / (PI * d * 60));
     uint32_t period_ns = 1000000000 / pulse_per_sec;
     uint32_t pulse_ns = period_ns / 2;
+
+    ULOG_DEBUG("speed (%f)(%d)(%f)", speed, ppr, speed * ppr * 1000.0);
+    ULOG_DEBUG("pulse ns (%d)(%d)(%d)", pulse_per_sec, period_ns, pulse_ns);
 
     return pulse_ns;
 }

@@ -31,6 +31,12 @@ enum enc_simu_channel
     ENC_SIMU_CHANNEL_MAX,
 };
 
+enum enc_simu_direction
+{
+    ENC_SIMU_DIR_LR,
+    ENC_SIMU_DIR_RL,
+};
+
 int enc_simu_start(int channel);
 int enc_simu_stop(int channel);
 
