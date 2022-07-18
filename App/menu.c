@@ -527,7 +527,7 @@ void Menu_Init(void)
     items[1].makeAction = 0;
 
     items[2].up = &items[1];
-    items[2].down = &items[3];
+    items[2].down = 0;
     items[2].child = &items_menu_3[0];
     items[2].parent = 0;
     items[2].id = 3;
