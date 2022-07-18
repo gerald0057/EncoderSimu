@@ -18,8 +18,13 @@
 
 static cfg_t cfg =
 {
+    .PI = 3.14,
+
     .diameter = 53.6,
-    .speed = {50, },
+    .ppr = 2000,
+
+    .speed = {50, 50, 100, 100},
+    .dir = {ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL}
 };
 
 cfg_t *cfgm(void)

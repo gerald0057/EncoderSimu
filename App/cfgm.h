@@ -35,7 +35,8 @@ struct cfg
     uint32_t ppr;           /* pulse per revolution */
 
     /* speed setting */
-    double speed[ENC_SIMU_CHANNEL_MAX];
+    double speed[ENC_SIMU_CHANNEL_MAX];     /* channel speed */
+    double dir[ENC_SIMU_CHANNEL_MAX];       /* channel direction */
 };
 
 cfg_t *cfgm(void);
