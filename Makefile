@@ -39,6 +39,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 App/cfgm.c \
+App/menu_u8g2.c \
 App/menu.c \
 App/encoder_simu.c \
 porting/u8g2/u8g2_porting_ssd1306.c \
