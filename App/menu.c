@@ -134,37 +134,11 @@ void print_rectangle_on_head(void)
     u8g2_DrawFrame(&u, 0, 0, 127, 15);
     u8g2_SendBuffer(&u);
 }
-// ----------------------------------------------------------------------------------------
-// Clear some menu items.
-void clear_menu_items(bool first, bool second, bool third, bool fourth)
-{
-    uint8_t start_row_x = 15;
-    char str[16] = "              "; // Must be 15
 
-    if (first == true)
-    {
-        u8g2_DrawStr(&u, start_row_x, first_menu_row, str);
-    }
-    if (second == true)
-    {
-        u8g2_DrawStr(&u, start_row_x, second_menu_row, str);
-    }
-    if (first == true)
-    {
-        u8g2_DrawStr(&u, start_row_x, third_menu_row, str);
-    }
-    if (fourth == true)
-    {
-        u8g2_DrawStr(&u, start_row_x, fourth_menu_row, str);
-    }
-    u8g2_SendBuffer(&u);
-}
 // ----------------------------------------------------------------------------------------
 void print_rows_on_oled_if_up(void)
 {
     char str[16] = {0};
-
-    clear_menu_items(true, true, true, true);
 
     print_rectangle_on_head();
 
@@ -197,8 +171,6 @@ void print_rows_on_oled_if_up(void)
 void print_rows_on_oled_if_down(void) // print text menu item
 {
     char str[16] = {0};
-
-    clear_menu_items(true, true, true, true);
 
     print_rectangle_on_head();
 
