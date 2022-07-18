@@ -18,6 +18,8 @@
 #include "u8g2_porting.h"
 #include "spi.h"
 
+/* ----------------------------- platform begin ----------------------------- */
+
 /* u8g2 use hardware spi */
 #define U8G2_HW_SPI_HANDLE  (hspi1)
 #define U8G2_HW_PIN_CS      (0)
@@ -55,6 +57,8 @@ static inline void u8g2_write_pin(int pin, int value)
 
     HAL_GPIO_WritePin(gpio->port, gpio->pin, value);
 }
+
+/* ------------------------------ platform end ------------------------------ */
 
 static uint8_t u8g2_gpio_and_delay_stm32(U8X8_UNUSED u8x8_t *u8x8, U8X8_UNUSED uint8_t msg, U8X8_UNUSED uint8_t arg_int,
                                   U8X8_UNUSED void *arg_ptr)
