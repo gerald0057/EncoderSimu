@@ -12,6 +12,7 @@
             ],
             "defines": [
                 "STM32G030xx",
+                "USE_FULL_LL_DRIVER",
                 "__GNUC__"
             ],
             "compilerPath": "${ARM_GCC10}/arm-none-eabi-gcc.exe",
