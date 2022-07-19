@@ -23,10 +23,21 @@
 
 #define INDEX_IN_ARRAY(i, arr)  (i < (sizeof(arr) / sizeof(arr[0])))
 
+enum stm32_enc_simu_type
+{
+    ENC_SIMU_HW,
+    ENC_SIMU_SW,
+};
+
 struct stm32_timer_enc
 {
-    TIM_HandleTypeDef *htim;
+    TIM_TypeDef *instance;
+    GPIO_TypeDef *channel_port;
     uint32_t channels[2];
+    GPIO_TypeDef *led_port;
+    uint32_t led_pin;
+    enum stm32_enc_simu_type type;
+    uint32_t sw_index;
 };
 
 struct stm32_timer_ops
@@ -40,27 +51,19 @@ struct stm32_timer_ops
 
 struct stm32_timer_enc enc_simu_map[] =
 {
-    {&htim3, {TIM_CHANNEL_1, TIM_CHANNEL_2}},
-    {&htim3, {TIM_CHANNEL_3, TIM_CHANNEL_4}},
-    {&htim1, {TIM_CHANNEL_1, TIM_CHANNEL_2}},
-    {&htim1, {TIM_CHANNEL_3, TIM_CHANNEL_4}},
+    {TIM3,  NULL,  {LL_TIM_CHANNEL_CH1, LL_TIM_CHANNEL_CH2}, LED_CH1_GPIO_Port, LED_CH1_Pin, ENC_SIMU_HW},
+    {TIM14, GPIOB, {LL_GPIO_PIN_0,      LL_GPIO_PIN_1     }, LED_CH2_GPIO_Port, LED_CH2_Pin, ENC_SIMU_SW},
+    {TIM1,  NULL,  {LL_TIM_CHANNEL_CH1, LL_TIM_CHANNEL_CH2}, LED_CH3_GPIO_Port, LED_CH3_Pin, ENC_SIMU_HW},
+    {TIM16, GPIOA, {LL_GPIO_PIN_10,     LL_GPIO_PIN_11    }, LED_CH4_GPIO_Port, LED_CH4_Pin, ENC_SIMU_SW},
 };
 
-static int stm32_timer_enc_init(void)
-{
-    MX_TIM1_Init();
-    MX_TIM3_Init();
-}
-
-static int stm32_gpio_enc_init(void)
-{
-    
-}
-
-static int stm32_gpio_trigger_init(void)
-{
-    
-}
+#define __TIM_SET_COMPARE(TIMx, __CHANNEL__, __COMPARE__) \
+  (((__CHANNEL__) == LL_TIM_CHANNEL_CH1) ? (TIMx->CCR1 = (__COMPARE__)) :\
+   ((__CHANNEL__) == LL_TIM_CHANNEL_CH2) ? (TIMx->CCR2 = (__COMPARE__)) :\
+   ((__CHANNEL__) == LL_TIM_CHANNEL_CH3) ? (TIMx->CCR3 = (__COMPARE__)) :\
+   ((__CHANNEL__) == LL_TIM_CHANNEL_CH4) ? (TIMx->CCR4 = (__COMPARE__)) :\
+   ((__CHANNEL__) == LL_TIM_CHANNEL_CH5) ? (TIMx->CCR5 = (__COMPARE__)) :\
+   (TIMx->CCR6 = (__COMPARE__)))
 
 static int stm32_timer_enc_start(int channel)
 {
@@ -70,8 +73,21 @@ static int stm32_timer_enc_start(int channel)
     {
         device = &(enc_simu_map[channel]);
 
-        HAL_TIM_OC_Start(device->htim, device->channels[0]);
-        HAL_TIM_OC_Start(device->htim, device->channels[1]);
+        if (ENC_SIMU_HW == device->type)
+        {
+            LL_TIM_DisableCounter(device->instance);
+            LL_TIM_CC_EnableChannel(device->instance, device->channels[0]);
+            LL_TIM_CC_EnableChannel(device->instance, device->channels[1]);
+            LL_TIM_EnableCounter(device->instance);
+        }
+        else
+        {
+            LL_TIM_ClearFlag_UPDATE(device->instance);
+            LL_TIM_EnableIT_UPDATE(device->instance);
+            LL_TIM_EnableCounter(device->instance);
+        }
+
+        LL_GPIO_ResetOutputPin(device->led_port, device->led_pin);
     }
 
     return 0;
@@ -85,8 +101,20 @@ static int stm32_timer_enc_stop(int channel)
     {
         device = &(enc_simu_map[channel]);
 
-        HAL_TIM_OC_Stop(device->htim, device->channels[0]);
-        HAL_TIM_OC_Stop(device->htim, device->channels[1]);
+        if (ENC_SIMU_HW == device->type)
+        {
+            LL_TIM_DisableCounter(device->instance);
+            LL_TIM_CC_DisableChannel(device->instance, device->channels[0]);
+            LL_TIM_CC_DisableChannel(device->instance, device->channels[1]);
+        }
+        else
+        {
+            LL_TIM_DisableCounter(device->instance);
+            LL_TIM_DisableIT_UPDATE(device->instance);
+            LL_TIM_ClearFlag_UPDATE(device->instance);
+        }
+
+        LL_GPIO_SetOutputPin(device->led_port, device->led_pin);
     }
 
     return 0;
@@ -100,23 +128,65 @@ static int stm32_timer_enc_config(int channel, uint32_t psc, uint32_t arr)
     {
         device = &(enc_simu_map[channel]);
 
-        __HAL_TIM_SET_AUTORELOAD(device->htim, arr - 1);
-        __HAL_TIM_SET_PRESCALER(device->htim, psc - 1);
-        __HAL_TIM_SET_COUNTER(device->htim, 0);
+        if (ENC_SIMU_HW == device->type)
+        {
+            device->instance->PSC = psc - 1;
+            device->instance->ARR = arr - 1;
+            device->instance->CNT = 0;
 
-        if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
-        {
-            __HAL_TIM_SET_COMPARE(device->htim, device->channels[0], 0);
-            __HAL_TIM_SET_COMPARE(device->htim, device->channels[1], (arr - 1) / 2);
+            if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
+            {
+                __TIM_SET_COMPARE(device->instance, device->channels[0], 0);
+                __TIM_SET_COMPARE(device->instance, device->channels[1], (arr / 2) - 1);
+            }
+            else if (ENC_SIMU_DIR_RL == cfgm()->dir[channel])
+            {
+                __TIM_SET_COMPARE(device->instance, device->channels[0], (arr / 2) - 1);
+                __TIM_SET_COMPARE(device->instance, device->channels[1], 0);
+            }
         }
-        else if (ENC_SIMU_DIR_RL == cfgm()->dir[channel])
+        else
         {
-            __HAL_TIM_SET_COMPARE(device->htim, device->channels[0], (arr - 1) / 2);
-            __HAL_TIM_SET_COMPARE(device->htim, device->channels[1], 0);
+            device->instance->PSC = psc - 1;
+            device->instance->CNT = 0;
+            device->instance->ARR = (arr / 2) - 1;
+            device->sw_index = 0;
         }
     }
 
     return 0;
+}
+
+void TimerUpdate_Callback(TIM_TypeDef *TIMx)
+{
+    int channel = -1;
+    struct stm32_timer_enc *device = NULL;
+
+    if (TIM14 == TIMx)
+    {
+        channel = 1;
+    }
+    else if (TIM16 == TIMx)
+    {
+        channel = 3;
+    }
+
+    device = &(enc_simu_map[channel]);
+
+    if (NULL == device->channel_port)
+    {
+        return;
+    }
+
+    if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
+    {
+        LL_GPIO_TogglePin(device->channel_port, device->channels[device->sw_index]);
+    }
+    else if (ENC_SIMU_DIR_RL == cfgm()->dir[channel])
+    {
+        LL_GPIO_TogglePin(device->channel_port, device->channels[!device->sw_index]);
+    }
+    device->sw_index = !!!device->sw_index;
 }
 
 struct stm32_timer_ops enc_ops =
