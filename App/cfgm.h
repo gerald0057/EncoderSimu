@@ -35,6 +35,8 @@ struct cfg
     /* speed setting */
     double speed[ENC_SIMU_CHANNEL_MAX];     /* channel speed */
     double dir[ENC_SIMU_CHANNEL_MAX];       /* channel direction */
+    /* enable setting */
+    int enable[ENC_SIMU_CHANNEL_MAX];
 };
 
 #define CFG_INITIAL                                                             \
@@ -43,7 +45,8 @@ struct cfg
     .diameter = 53.6,                                                           \
     .ppr = 2000,                                                                \
     .speed = {50, 50, 100, 100},                                                \
-    .dir = {ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL} \
+    .dir = {ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL},\
+    .enable = {0},                                                              \
 }
 
 cfg_t *cfgm(void);
