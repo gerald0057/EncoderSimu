@@ -56,7 +56,6 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim14;
 extern TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN EV */
@@ -149,12 +148,34 @@ void SysTick_Handler(void)
 void TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM14_IRQn 0 */
-
+  if (LL_TIM_IsActiveFlag_UPDATE(TIM14) == 1)
+  {
+      /* Clear the update interrupt flag */
+      LL_TIM_ClearFlag_UPDATE(TIM14);
+  }
+  TimerUpdate_Callback(TIM14);
   /* USER CODE END TIM14_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim14);
   /* USER CODE BEGIN TIM14_IRQn 1 */
 
   /* USER CODE END TIM14_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM16 global interrupt.
+  */
+void TIM16_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM16_IRQn 0 */
+  if (LL_TIM_IsActiveFlag_UPDATE(TIM16) == 1)
+  {
+      /* Clear the update interrupt flag */
+      LL_TIM_ClearFlag_UPDATE(TIM16);
+  }
+  TimerUpdate_Callback(TIM16);
+  /* USER CODE END TIM16_IRQn 0 */
+  /* USER CODE BEGIN TIM16_IRQn 1 */
+
+  /* USER CODE END TIM16_IRQn 1 */
 }
 
 /**

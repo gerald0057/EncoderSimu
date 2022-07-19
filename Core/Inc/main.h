@@ -30,6 +30,19 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g0xx_hal.h"
 
+#include "stm32g0xx_ll_rcc.h"
+#include "stm32g0xx_ll_bus.h"
+#include "stm32g0xx_ll_system.h"
+#include "stm32g0xx_ll_exti.h"
+#include "stm32g0xx_ll_cortex.h"
+#include "stm32g0xx_ll_utils.h"
+#include "stm32g0xx_ll_pwr.h"
+#include "stm32g0xx_ll_dma.h"
+#include "stm32g0xx_ll_spi.h"
+#include "stm32g0xx_ll_tim.h"
+#include "stm32g0xx_ll_usart.h"
+#include "stm32g0xx_ll_gpio.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ulog.h"
@@ -54,33 +67,33 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void TimerUpdate_Callback(TIM_TypeDef *TIMx);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define OLED_DC_Pin GPIO_PIN_9
+#define OLED_DC_Pin LL_GPIO_PIN_9
 #define OLED_DC_GPIO_Port GPIOB
-#define OLED_RST_Pin GPIO_PIN_14
+#define OLED_RST_Pin LL_GPIO_PIN_14
 #define OLED_RST_GPIO_Port GPIOC
-#define OLED_CS_Pin GPIO_PIN_15
+#define OLED_CS_Pin LL_GPIO_PIN_15
 #define OLED_CS_GPIO_Port GPIOC
-#define LED_SYS_Pin GPIO_PIN_5
+#define LED_SYS_Pin LL_GPIO_PIN_5
 #define LED_SYS_GPIO_Port GPIOA
-#define LED_CH1_Pin GPIO_PIN_2
+#define LED_CH1_Pin LL_GPIO_PIN_2
 #define LED_CH1_GPIO_Port GPIOB
-#define LED_CH2_Pin GPIO_PIN_6
+#define LED_CH2_Pin LL_GPIO_PIN_6
 #define LED_CH2_GPIO_Port GPIOC
-#define LED_CH3_Pin GPIO_PIN_12
+#define LED_CH3_Pin LL_GPIO_PIN_12
 #define LED_CH3_GPIO_Port GPIOA
-#define LED_CH4_Pin GPIO_PIN_15
+#define LED_CH4_Pin LL_GPIO_PIN_15
 #define LED_CH4_GPIO_Port GPIOA
-#define KEY_D_Pin GPIO_PIN_3
+#define KEY_D_Pin LL_GPIO_PIN_3
 #define KEY_D_GPIO_Port GPIOB
-#define KEY_R_Pin GPIO_PIN_4
+#define KEY_R_Pin LL_GPIO_PIN_4
 #define KEY_R_GPIO_Port GPIOB
-#define KEY_L_Pin GPIO_PIN_5
+#define KEY_L_Pin LL_GPIO_PIN_5
 #define KEY_L_GPIO_Port GPIOB
-#define KEY_U_Pin GPIO_PIN_8
+#define KEY_U_Pin LL_GPIO_PIN_8
 #define KEY_U_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
