@@ -191,7 +191,7 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
-
+  MX_ENC_GPIO_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
