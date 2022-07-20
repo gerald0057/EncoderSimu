@@ -45,7 +45,7 @@ struct cfg
     .diameter = 53.6,                                                           \
     .ppr = 2000,                                                                \
     .speed = {50, 50, 100, 100},                                                \
-    .dir = {ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL},\
+    .dir = {ENC_SIMU_DIR_LR, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_RL, ENC_SIMU_DIR_LR},\
     .enable = {0},                                                              \
 }
 
