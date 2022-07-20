@@ -75,9 +75,14 @@ static int stm32_timer_enc_start(int channel)
 
         if (ENC_SIMU_HW == device->type)
         {
-            LL_TIM_DisableCounter(device->instance);
             LL_TIM_CC_EnableChannel(device->instance, device->channels[0]);
             LL_TIM_CC_EnableChannel(device->instance, device->channels[1]);
+
+            if (IS_TIM_BREAK_INSTANCE(device->instance))
+            {
+                LL_TIM_EnableAllOutputs(device->instance);
+            }
+
             LL_TIM_EnableCounter(device->instance);
         }
         else
@@ -103,6 +108,14 @@ static int stm32_timer_enc_stop(int channel)
 
         if (ENC_SIMU_HW == device->type)
         {
+            LL_TIM_OC_SetMode(device->instance, device->channels[0], LL_TIM_OCMODE_FORCED_INACTIVE);
+            LL_TIM_OC_SetMode(device->instance, device->channels[1], LL_TIM_OCMODE_FORCED_INACTIVE);
+
+            if (IS_TIM_BREAK_INSTANCE(device->instance))
+            {
+                LL_TIM_DisableAllOutputs(device->instance);
+            }
+
             LL_TIM_DisableCounter(device->instance);
             LL_TIM_CC_DisableChannel(device->instance, device->channels[0]);
             LL_TIM_CC_DisableChannel(device->instance, device->channels[1]);
@@ -134,6 +147,9 @@ static int stm32_timer_enc_config(int channel, uint32_t psc, uint32_t arr)
             device->instance->ARR = arr - 1;
             device->instance->CNT = 0;
 
+            LL_TIM_OC_SetMode(device->instance, device->channels[0], LL_TIM_OCMODE_TOGGLE);
+            LL_TIM_OC_SetMode(device->instance, device->channels[1], LL_TIM_OCMODE_TOGGLE);
+
             if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
             {
                 __TIM_SET_COMPARE(device->instance, device->channels[0], 0);
@@ -150,7 +166,19 @@ static int stm32_timer_enc_config(int channel, uint32_t psc, uint32_t arr)
             device->instance->PSC = psc - 1;
             device->instance->CNT = 0;
             device->instance->ARR = (arr / 2) - 1;
-            device->sw_index = 0;
+
+            if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
+            {
+                device->sw_index = 0;
+                LL_GPIO_SetOutputPin(device->channel_port, device->channels[1]);
+                LL_GPIO_ResetOutputPin(device->channel_port, device->channels[0]);
+            }
+            else if (ENC_SIMU_DIR_RL == cfgm()->dir[channel])
+            {
+                device->sw_index = 1;
+                LL_GPIO_SetOutputPin(device->channel_port, device->channels[0]);
+                LL_GPIO_ResetOutputPin(device->channel_port, device->channels[1]);
+            }
         }
     }
 
@@ -178,14 +206,7 @@ void TimerUpdate_Callback(TIM_TypeDef *TIMx)
         return;
     }
 
-    if (ENC_SIMU_DIR_LR == cfgm()->dir[channel])
-    {
-        LL_GPIO_TogglePin(device->channel_port, device->channels[device->sw_index]);
-    }
-    else if (ENC_SIMU_DIR_RL == cfgm()->dir[channel])
-    {
-        LL_GPIO_TogglePin(device->channel_port, device->channels[!device->sw_index]);
-    }
+    LL_GPIO_TogglePin(device->channel_port, device->channels[device->sw_index]);
     device->sw_index = !!!device->sw_index;
 }
 
