@@ -199,6 +199,8 @@ void print_speed_bar(void *param)
 
     ULOG_DEBUG("speed bar %d %d", speed_changing_index, speed);
 
+    enc_simu_start(speed_changing_index);
+
     sprintf(str, "%d m/min", speed);
     menu_clear_item();
     menu_api_draw_str(30, 35, str);
@@ -543,6 +545,7 @@ void menu(void)
         }
         button_maintain();
         HAL_Delay(20);
+        ULOG_DEBUG("TIM14: %d TIM16: %d", TIM14->CNT, TIM16->CNT);
     }
 }
 
